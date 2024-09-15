@@ -1,22 +1,60 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import axios from '../axios';
 import SignUpImage from '../assets/Picture1.png';
 
-export default function SignUp() {
+export default function SignUpPage() {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    contactMode: ''
+  });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match!");
+      return;
+    }
+    try {
+      const response = await axios.post('/api/auth/signup', formData); // Adjust URL if needed
+      console.log("API Response:", response.data); // Log the response for debugging
+  
+      if (response.data.success) {
+        navigate('/verify', { state: { email: formData.email } });
+      } else {
+        setError(response.data.message || "Signup failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error during signup:", error);
+      setError("Signup failed. Please try again.");
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col lg:flex-row items-center justify-center p-4">
       <div className="w-full max-w-md lg:w-1/2 lg:max-w-none mb-8 lg:mb-0">
-      <img
-  src={SignUpImage}
-  alt="Illustration"
-  className="w-full h-full max-w-2xl max-h-2xl mx-auto object-contain" // Larger size
-/>
-
-
-
+        <img
+          src={SignUpImage}
+          alt="Illustration"
+          className="w-full h-full max-w-2xl max-h-2xl mx-auto object-contain"
+        />
       </div>
       <div className="w-full max-w-md lg:w-1/2">
         <div className="bg-white shadow-md rounded-lg p-8">
@@ -24,11 +62,11 @@ export default function SignUp() {
             <h2 className="text-2xl font-bold text-purple-800">
               Let us know <span className="text-red-500">!</span>
             </h2>
-            <a href="#" className="text-sm text-purple-800 hover:underline">
+            <a href="/signin" className="text-sm text-purple-800 hover:underline">
               Sign In
             </a>
           </div>
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
                 First Name
@@ -36,6 +74,8 @@ export default function SignUp() {
               <input
                 type="text"
                 id="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                 required
               />
@@ -47,6 +87,8 @@ export default function SignUp() {
               <input
                 type="text"
                 id="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                 required
               />
@@ -59,6 +101,8 @@ export default function SignUp() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
+                  value={formData.password}
+                  onChange={handleChange}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                   required
                 />
@@ -79,6 +123,8 @@ export default function SignUp() {
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   id="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                   required
                 />
@@ -98,6 +144,8 @@ export default function SignUp() {
               <div className="mt-1 relative">
                 <select
                   id="contactMode"
+                  value={formData.contactMode}
+                  onChange={handleChange}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 appearance-none"
                   required
                 >
@@ -115,10 +163,13 @@ export default function SignUp() {
               <input
                 type="email"
                 id="email"
+                value={formData.email}
+                onChange={handleChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                 required
               />
             </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             <div>
               <button
                 type="submit"
